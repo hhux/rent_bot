@@ -1,8 +1,10 @@
+import uuid
+
 from django.db import models
 
 
 class Moto(models.Model):
-    id = models.UUIDField(primary_key=True, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     model_name = models.CharField(max_length=2048, null=True)
     price_per_day = models.CharField(max_length=2048, null=True)
     photo = models.ImageField(null=True)
@@ -10,7 +12,7 @@ class Moto(models.Model):
 
 
 class Yacht(models.Model):
-    id = models.UUIDField(primary_key=True, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     model_name = models.CharField(max_length=2048, null=True)
     price_per_day = models.CharField(max_length=2048, null=True)
     photo = models.ImageField(null=True)
