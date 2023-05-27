@@ -1,1 +1,2 @@
-# rent_telegram_bot
+docker-compose -f docker-compose.yml up -d --build 
+bash debug.sh
