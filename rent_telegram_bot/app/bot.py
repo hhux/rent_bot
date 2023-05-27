@@ -32,35 +32,43 @@ def main_handler(message):
 def moto_handler(message):
     bot.send_message(message.chat.id, "Here is the list of available motorcycles:",
                      reply_markup=back_button_menu_markup)
-    response = requests.get('http://127.0.0.1:8000/moto/')
-    for i in response.json():
-        if not i['rented']:
-            response = requests.get(i['photo'])
-            img = Image.open(BytesIO(response.content))
-            button_text = f'Order {i["model_name"]}'
-            reply_markup = types.InlineKeyboardMarkup([[types.InlineKeyboardButton(button_text,
-                                                                                   callback_data=button_text)]])
-            bot.send_photo(message.chat.id, img, f'Moto: {i["model_name"]}, \nPrice per day: {i["price_per_day"]}€',
-                           reply_markup=reply_markup)
+    response = requests.get('http://0.0.0.0:8000/moto/')
+    vehicle_type = 'Moto'
+    response_parser(message=message, response=response, vehicle_type=vehicle_type)
 
 
 # Define the yacht handler
 @bot.message_handler(func=lambda message: message.text.lower() == 'yacht')
 def yacht_handler(message):
     bot.send_message(message.chat.id, "Here is the list of available yachts:", reply_markup=back_button_menu_markup)
-    response = requests.get('http://127.0.0.1:8000/yacht/')
-    for i in response.json():
-        response = requests.get(i['photo'])
-        img = Image.open(BytesIO(response.content))
-        button_text = f'Order {i["model_name"]}'
-        reply_markup = types.InlineKeyboardMarkup([[types.InlineKeyboardButton(button_text,
-                                                                               callback_data=button_text)]])
-        bot.send_photo(message.chat.id, img, f'Yacht: {i["model_name"]}, \nPrice per day: {i["price_per_day"]}€',
-                       reply_markup=reply_markup)
+    response = requests.get('http://0.0.0.0:8000/yacht/')
+    vehicle_type = 'Yacht'
+    response_parser(message=message, response=response, vehicle_type=vehicle_type)
+
+
+# Returns vehicles available for rent
+def response_parser(message, response: requests.models.Response, vehicle_type: str):
+    parsed_json = response.json()
+    if parsed_json:
+        for i in parsed_json:
+            if not i['rented']:
+                response = requests.get(i['photo'])
+                img = Image.open(BytesIO(response.content))
+                button_text = f'Order {i["model_name"]}'
+                reply_markup = types.InlineKeyboardMarkup([[types.InlineKeyboardButton(button_text,
+                                                                                       callback_data=button_text)]])
+                bot.send_photo(
+                    message.chat.id, img, f'{vehicle_type}: {i["model_name"]}, \nPrice per day: {i["price_per_day"]}€',
+                    reply_markup=reply_markup)
+    else:
+        bot.send_message(
+            message.chat.id,
+            f'We apologize, but currently we do not have any {vehicle_type}s available for rental. '
+            'We apologize for any inconvenience caused.')
 
 
 # Handle moto and yacht order
-@bot.callback_query_handler(func=lambda call: call.data.startswith('order_'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('Order'))
 def handle_order(callback_query):
     caption = callback_query.json['message']['caption'].split(',')[0]
     bot.send_message(callback_query.message.chat.id,
